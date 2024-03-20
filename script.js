@@ -132,6 +132,4 @@ query.get(id).then(function(pedido) {
 });
 }
 
-// Chamar a função para listar os pedidos assim que a página carregar
-listarPedidos();
-       
+
