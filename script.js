@@ -59,47 +59,79 @@ function mostrarPedidosNaPagina(pedidos) {
         var acompanhamento = pedido.get('acompanhamento');
         var bebida = pedido.get('bebida');
         var preco = pedido.get('preco');
+        var id = pedido.id; // Obter o ID do pedido
 
         var listItem = document.createElement('li');
         listItem.textContent = `Prato: ${prato}, Acompanhamento: ${acompanhamento}, Bebida: ${bebida}, Preço: R$ ${preco}`;
+
+        // Botão para editar o pedido
+        var editButton = document.createElement('button');
+        editButton.textContent = 'Editar';
+        editButton.onclick = function() {
+            editarPedido(id);
+        };
+        listItem.appendChild(editButton);
+
+        // Botão para excluir o pedido
+        var deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Excluir';
+        deleteButton.onclick = function() {
+            deletarPedido(id);
+            // Recarregar a lista após a exclusão
+            listarPedidos();
+        };
+        listItem.appendChild(deleteButton);
+
         listaPedidos.appendChild(listItem);
     });
 }
 
 // Função para editar um pedido
 function editarPedido(id) {
+    var novoPrato = prompt("Novo prato:");
+    var novoAcompanhamento = prompt("Novo acompanhamento:");
+    var novaBebida = prompt("Nova bebida:");
+    var novoPreco = parseFloat(prompt("Novo preço:"));
+
     var Pedido = Parse.Object.extend('pedidos');
     var query = new Parse.Query(Pedido);
 
     // Buscar o pedido pelo ID
     query.get(id).then(function(pedido) {
         // Modificar os valores do pedido
-        pedido.set('prato', 'Novo prato');
-        pedido.set('acompanhamento', 'Novo acompanhamento');
-        pedido.set('bebida', 'Nova bebida');
-        pedido.set('preco', 20); // Novo preço
+        pedido.set('prato', novoPrato);
+        pedido.set('acompanhamento', novoAcompanhamento);
+        pedido.set('bebida', novaBebida);
+        pedido.set('preco', novoPreco);
 
         // Salvar as modificações no banco de dados
         return pedido.save();
     }).then(function(updatedPedido) {
         console.log('Pedido atualizado com sucesso:', updatedPedido);
-    }).catch(function(error) {
-        console.error('Erro ao atualizar o pedido:', error);
-    });
+        // Recarregar a lista após a edição
+        listarPedidos();
+    }).catch(function(error) {     console.error('Erro ao atualizar o pedido:', error);
+});
 }
 
 // Função para deletar um pedido
 function deletarPedido(id) {
-    var Pedido = Parse.Object.extend('pedidos');
-    var query = new Parse.Query(Pedido);
+var Pedido = Parse.Object.extend('pedidos');
+var query = new Parse.Query(Pedido);
 
-    // Buscar o pedido pelo ID
-    query.get(id).then(function(pedido) {
-        // Deletar o pedido
-        return pedido.destroy();
-    }).then(function(deletedPedido) {
-        console.log('Pedido deletado com sucesso:', deletedPedido);
-    }).catch(function(error) {
-        console.error('Erro ao deletar o pedido:', error);
-    });
+// Buscar o pedido pelo ID
+query.get(id).then(function(pedido) {
+    // Deletar o pedido
+    return pedido.destroy();
+}).then(function(deletedPedido) {
+    console.log('Pedido deletado com sucesso:', deletedPedido);
+    // Recarregar a lista após a exclusão
+    listarPedidos();
+}).catch(function(error) {
+    console.error('Erro ao deletar o pedido:', error);
+});
 }
+
+// Chamar a função para listar os pedidos assim que a página carregar
+listarPedidos();
+       
