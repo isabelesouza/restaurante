@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurante</title>
+</head>
+<body>
+    <h1>Restaurante - Faça seu Pedido</h1>
+
+    <form id="pedidoForm">
+        <label for="prato">Prato:</label>
+        <input type="text" id="prato" required><br><br>
+
+        <label for="acompanhamento">Acompanhamento:</label>
+        <input type="text" id="acompanhamento" required><br><br>
+
+        <label for="bebida">Bebida:</label>
+        <input type="text" id="bebida" required><br><br>
+
+        <label for="preco">Preço:</label>
+        <input type="number" id="preco" step="0.01" min="0" required><br><br>
+
+        <input type="button" value="Enviar Pedido" onclick="enviarPedido()">
+    </form>
+
+    <script>
+        function enviarPedido() {
+            var prato = document.getElementById('prato').value;
+            var acompanhamento = document.getElementById('acompanhamento').value;
+            var bebida = document.getElementById('bebida').value;
+            var preco = document.getElementById('preco').value;
+
+            // Aqui você pode adicionar lógica adicional, como validação dos campos, envio de dados para um servidor, etc.
+
+            // Exemplo de como exibir os dados do pedido em um alerta:
+            var mensagem = "Pedido Confirmado:\n\n";
+            mensagem += "Prato: " + prato + "\n";
+            mensagem += "Acompanhamento: " + acompanhamento + "\n";
+            mensagem += "Bebida: " + bebida + "\n";
+            mensagem += "Preço: R$ " + preco + "\n";
+            alert(mensagem);
+
+            // Limpar o formulário após o envio do pedido
+            document.getElementById('pedidoForm').reset();
+        }
+    </script>
+</body>
+</html>
