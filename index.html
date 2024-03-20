@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurante</title>
 
-    <script src="node_modules/parse/dist/parse.min.js"></script>
+    <script type="text/javascript" src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+
 
 <script>
-    Parse.serverURL = 'https://parseapi.back4app.com'; // Esta é a URL do seu servidor Parse
-    // Lembre-se de informar tanto o ID do aplicativo Back4App QUANTO a chave JavaScript
+
     Parse.initialize(
         '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk', // Este é o seu ID do Aplicativo
         'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE' // Esta é a sua chave JavaScript
     );
+    Parse.serverURL = 'https://parseapi.back4app.com';
 </script>
 
 </head>
