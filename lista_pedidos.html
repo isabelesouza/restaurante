@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,53 +10,5 @@
 <body onload="listarPedidos()">
     <h1>Lista de Pedidos</h1>
     <ul id="lista-pedidos"></ul>
-
-    <!-- Elemento HTML onde os itens dos pedidos serão exibidos -->
-    <h2>Itens dos Pedidos</h2>
-    <ul id="lista-itens-pedidos"></ul>
-
-    <script>
-        // Configurar o Parse SDK
-        Parse.serverURL = 'https://parseapi.back4app.com';
-        Parse.initialize(
-            '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk', // Seu Application ID
-            'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE' // Sua JavaScript key
-        );
-
-        // Função para listar os itens dos pedidos salvos no banco de dados
-        function listarItensPedidos() {
-            var Pedido = Parse.Object.extend('pedidos');
-            var query = new Parse.Query(Pedido);
-
-            query.find().then(function(results) {
-                console.log('Itens dos pedidos encontrados:', results);
-                // Mostrar os itens dos pedidos na página
-                mostrarItensPedidosNaPagina(results);
-            }).catch(function(error) {
-                console.error('Erro ao buscar os itens dos pedidos:', error);
-                alert('Erro ao buscar os itens dos pedidos. Por favor, tente novamente.');
-            });
-        }
-
-        // Função para mostrar os itens dos pedidos na página
-        function mostrarItensPedidosNaPagina(itensPedidos) {
-            var listaItensPedidos = document.getElementById('lista-itens-pedidos');
-            listaItensPedidos.innerHTML = ''; // Limpar a lista antes de adicionar os itens dos pedidos
-
-            itensPedidos.forEach(function(itemPedido) {
-                var prato = itemPedido.get('prato');
-                var acompanhamento = itemPedido.get('acompanhamento');
-                var bebida = itemPedido.get('bebida');
-                var preco = itemPedido.get('preco');
-
-                var listItem = document.createElement('li');
-                listItem.textContent = `Prato: ${prato}, Acompanhamento: ${acompanhamento}, Bebida: ${bebida}, Preço: R$ ${preco}`;
-                listaItensPedidos.appendChild(listItem);
-            });
-        }
-
-        // Chamar a função para listar os itens dos pedidos quando a página carregar
-        listarItensPedidos();
-    </script>
 </body>
 </html>
