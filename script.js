@@ -1,6 +1,3 @@
-// Importar o Parse SDK
-import Parse from 'parse';
-
 // Configurar o Parse SDK
 Parse.serverURL = 'https://parseapi.back4app.com';
 Parse.initialize(
