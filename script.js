@@ -14,6 +14,6 @@ function enviarPedido() {
     mensagem += "Preço: R$ " + preco + "\n";
     alert(mensagem);
 
-    // Limpar o formulário após o envio do pedido
+    // Limpar o formulário após o envio do pedido,teste
     document.getElementById('pedidoForm').reset();
 }
