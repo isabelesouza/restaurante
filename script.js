@@ -1,22 +1,22 @@
-// Configurar o Parse SDK
+
 Parse.serverURL = 'https://parseapi.back4app.com';
 Parse.initialize(
-    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk', // Seu Application ID
-    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE' // Sua JavaScript key
+    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk', 
+    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE' 
 );
 
-// Função para enviar o pedido para o banco de dados
+// enviar o pedido para o banco de dados
 function enviarPedido() {
     var prato = document.getElementById('prato').value;
     var acompanhamento = document.getElementById('acompanhamento').value;
     var bebida = document.getElementById('bebida').value;
-    var preco = parseFloat(document.getElementById('preco').value); // Convertendo para número
+    var preco = parseFloat(document.getElementById('preco').value); 
 
-    // Criar um objeto Parse para a classe 'pedidos'
+    
     var Pedido = Parse.Object.extend('pedidos');
     var pedido = new Pedido();
 
-    // Definir os valores do pedido
+   
     pedido.set('prato', prato);
     pedido.set('acompanhamento', acompanhamento);
     pedido.set('bebida', bebida);
@@ -41,7 +41,7 @@ function listarPedidos() {
 
     query.find().then(function(results) {
         console.log('Pedidos encontrados:', results);
-        // Mostrar os pedidos em algum lugar na sua página
+        
         mostrarPedidosNaPagina(results);
     }).catch(function(error) {
         console.error('Erro ao buscar os pedidos:', error);
@@ -52,19 +52,19 @@ function listarPedidos() {
 // Função para mostrar os pedidos na página
 function mostrarPedidosNaPagina(pedidos) {
     var listaPedidos = document.getElementById('lista-pedidos');
-    listaPedidos.innerHTML = ''; // Limpar a lista antes de adicionar os pedidos
+    listaPedidos.innerHTML = ''; 
 
     pedidos.forEach(function(pedido) {
         var prato = pedido.get('prato');
         var acompanhamento = pedido.get('acompanhamento');
         var bebida = pedido.get('bebida');
         var preco = pedido.get('preco');
-        var id = pedido.id; // Obter o ID do pedido
+        var id = pedido.id; 
 
         var listItem = document.createElement('li');
         listItem.textContent = `Prato: ${prato}, Acompanhamento: ${acompanhamento}, Bebida: ${bebida}, Preço: R$ ${preco}`;
 
-        // Botão para editar o pedido
+       
         var editButton = document.createElement('button');
         editButton.textContent = 'Editar';
         editButton.className = 'btn-editar';
@@ -73,7 +73,7 @@ function mostrarPedidosNaPagina(pedidos) {
         };
         listItem.appendChild(editButton);
 
-        // Botão para excluir o pedido
+       
         var deleteButton = document.createElement('button');
         deleteButton.textContent = 'Excluir';
         deleteButton.className = 'btn-excluir';
@@ -88,7 +88,6 @@ function mostrarPedidosNaPagina(pedidos) {
     });
 }
 
-// Função para editar um pedido
 function editarPedido(id) {
     var novoPrato = prompt("Novo prato:");
     var novoAcompanhamento = prompt("Novo acompanhamento:");
@@ -98,7 +97,7 @@ function editarPedido(id) {
     var Pedido = Parse.Object.extend('pedidos');
     var query = new Parse.Query(Pedido);
 
-    // Buscar o pedido pelo ID
+    
     query.get(id).then(function(pedido) {
         // Modificar os valores do pedido
         pedido.set('prato', novoPrato);
@@ -110,13 +109,13 @@ function editarPedido(id) {
         return pedido.save();
     }).then(function(updatedPedido) {
         console.log('Pedido atualizado com sucesso:', updatedPedido);
-        // Recarregar a lista após a edição
+        // Recarregar a lista 
         listarPedidos();
     }).catch(function(error) {     console.error('Erro ao atualizar o pedido:', error);
 });
 }
 
-// Função para deletar um pedido
+//  deletar um pedido
 function deletarPedido(id) {
 var Pedido = Parse.Object.extend('pedidos');
 var query = new Parse.Query(Pedido);
@@ -127,7 +126,7 @@ query.get(id).then(function(pedido) {
     return pedido.destroy();
 }).then(function(deletedPedido) {
     console.log('Pedido deletado com sucesso:', deletedPedido);
-    // Recarregar a lista após a exclusão
+    // Recarregar a lista
     listarPedidos();
 }).catch(function(error) {
     console.error('Erro ao deletar o pedido:', error);
