@@ -75,6 +75,7 @@ function mostrarPedidosNaPagina(pedidos) {
         // Botão para excluir o pedido
         var deleteButton = document.createElement('button');
         deleteButton.textContent = 'Excluir';
+        deleteButton.className = 'btn-excluir';
         deleteButton.onclick = function() {
             deletarPedido(id);
             // Recarregar a lista após a exclusão
