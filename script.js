@@ -67,6 +67,7 @@ function mostrarPedidosNaPagina(pedidos) {
         // Botão para editar o pedido
         var editButton = document.createElement('button');
         editButton.textContent = 'Editar';
+        editButton.className = 'btn-editar';
         editButton.onclick = function() {
             editarPedido(id);
         };
