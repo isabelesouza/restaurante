@@ -7,7 +7,8 @@ Parse.initialize(
 );
 Parse.serverURL = 'https://parseapi.back4app.com';
 
-// Function to send the pedido and display the token
+
+// Função para enviar o pedido e exibir o token
 async function enviarPedido() {
     const prato = document.getElementById('prato').value;
     const acompanhamento = document.getElementById('acompanhamento').value;
@@ -24,15 +25,15 @@ async function enviarPedido() {
 
     if (response.ok) {
         const data = await response.json();
-        token = data.token;  // Store the token
+        token = data.token;  // Armazena o token recebido
         alert(`Pedido enviado com sucesso! Seu token JWT: ${token}`);
         document.getElementById('pedidoForm').reset();
     } else {
-        alert("Erro ao enviar pedido.");
+        alert("Erro ao enviar o pedido.");
     }
 }
 
-// Function to list pedidos using the token
+// Função para listar pedidos usando o token
 async function listarPedidos() {
     if (!token) {
         alert("Por favor, envie um pedido primeiro para obter um token.");
@@ -49,7 +50,7 @@ async function listarPedidos() {
     if (response.ok) {
         const pedidos = await response.json();
         const listaPedidos = document.getElementById('lista-pedidos');
-        listaPedidos.innerHTML = '';  // Clear the list first
+        listaPedidos.innerHTML = '';  // Limpa a lista antes de adicionar novos itens
 
         pedidos.forEach(pedido => {
             const item = document.createElement('li');
@@ -58,37 +59,5 @@ async function listarPedidos() {
         });
     } else {
         alert("Erro ao listar os pedidos ou token inválido.");
-    }
-}
-
-// Function to edit a pedido
-async function editarPedido(pedido) {
-    const novoPrato = prompt('Novo prato:', pedido.get('prato'));
-    const novoAcompanhamento = prompt('Novo acompanhamento:', pedido.get('acompanhamento'));
-    const novaBebida = prompt('Nova bebida:', pedido.get('bebida'));
-    const novoPreco = prompt('Novo preço:', pedido.get('preco'));
-
-    pedido.set('prato', novoPrato);
-    pedido.set('acompanhamento', novoAcompanhamento);
-    pedido.set('bebida', novaBebida);
-    pedido.set('preco', novoPreco);
-
-    try {
-        await pedido.save();
-        alert('Pedido editado com sucesso!');
-        window.location.reload();
-    } catch (error) {
-        alert('Erro ao editar o pedido: ' + error.message);
-    }
-}
-
-// Function to delete a pedido
-async function deletarPedido(pedido) {
-    try {
-        await pedido.destroy();
-        alert('Pedido excluído com sucesso!');
-        window.location.reload();
-    } catch (error) {
-        alert('Erro ao excluir o pedido: ' + error.message);
     }
 }
