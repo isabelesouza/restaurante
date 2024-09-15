@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-const Parse = require('./config/back4app');  // Importing Back4App configuration
+const Parse = require('./config/back4app');  // Importa o Back4App
 const amqp = require('amqplib/callback_api');
 
 const app = express();
@@ -9,7 +9,7 @@ app.use(bodyParser.json());
 
 const JWT_SECRET = 'your_jwt_secret';
 
-// Middleware to verify JWT token
+// Middleware para verificar o token JWT
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
     if (bearerHeader) {
@@ -27,11 +27,11 @@ function verifyToken(req, res, next) {
     }
 }
 
-// Route to create a pedido and generate a token
+// Rota para criar o pedido e gerar o token
 app.post('/pedidos', async (req, res) => {
     const { prato, acompanhamento, bebida, preco } = req.body;
 
-    // Save to Back4App
+    // Salva no Back4App
     const Pedido = Parse.Object.extend('Pedido');
     const novoPedido = new Pedido();
     novoPedido.set('prato', prato);
@@ -41,14 +41,13 @@ app.post('/pedidos', async (req, res) => {
 
     try {
         const savedPedido = await novoPedido.save();
-        console.log('Pedido salvo no Back4App:', savedPedido);
 
-        // Generate JWT token
+        // Gera o token JWT
         const payload = { permission: 'access_orders' };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 
-        // Send to RabbitMQ
-        amqp.connect('amqps://vkikkzte:Hx95EnJQdMfYvipDsNTxmKabOikOwJMT@prawn.rmq.cloudamqp.com/vkikkzte', (error0, connection) => {
+        // Envia para RabbitMQ
+        amqp.connect('amqps://your_rabbitmq_url', (error0, connection) => {
             if (error0) throw error0;
             connection.createChannel((error1, channel) => {
                 if (error1) throw error1;
@@ -59,17 +58,15 @@ app.post('/pedidos', async (req, res) => {
                 channel.assertQueue(queue, { durable: false });
                 channel.sendToQueue(queue, Buffer.from(msg));
 
-                console.log('Pedido enviado para RabbitMQ:', msg);
-                res.json({ message: 'Pedido enviado com sucesso', token });  // Return token to user
+                res.json({ message: 'Pedido enviado com sucesso', token });
             });
         });
     } catch (error) {
-        console.error('Erro ao salvar o pedido:', error);
         res.status(500).json({ error: 'Erro ao salvar o pedido no Back4App' });
     }
 });
 
-// Route to list pedidos with JWT
+// Rota para listar pedidos com JWT
 app.get('/pedidos', verifyToken, async (req, res) => {
     const Pedido = Parse.Object.extend('Pedido');
     const query = new Parse.Query(Pedido);
@@ -85,7 +82,6 @@ app.get('/pedidos', verifyToken, async (req, res) => {
 
         res.json(pedidos);
     } catch (error) {
-        console.error('Erro ao listar os pedidos:', error);
         res.status(500).json({ error: 'Erro ao listar os pedidos' });
     }
 });

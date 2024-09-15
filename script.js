@@ -1,19 +1,20 @@
-let token = '';  // Store the JWT token
-
-// Initialize Parse with Back4App credentials
+// Inicializar Parse com as credenciais do Back4App
 Parse.initialize(
-    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk',  // Application ID
-    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE'   // JavaScript Key
+    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk',  // Application ID do Back4App
+    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE'   // JavaScript Key do Back4App
 );
 Parse.serverURL = 'https://parseapi.back4app.com';
 
+let token = '';  // Variável para armazenar o token JWT
 
+// Função para enviar o pedido e gerar token
 async function enviarPedido() {
     const prato = document.getElementById('prato').value;
     const acompanhamento = document.getElementById('acompanhamento').value;
     const bebida = document.getElementById('bebida').value;
     const preco = document.getElementById('preco').value;
 
+    // Enviar dados para o backend e salvar no Back4App
     const response = await fetch('/pedidos', {
         method: 'POST',
         headers: {
@@ -23,7 +24,10 @@ async function enviarPedido() {
     });
 
     if (response.ok) {
-        alert("Pedido enviado com sucesso!");
+        const data = await response.json();
+        token = data.token;  // Armazena o token recebido
+        alert(`Pedido enviado com sucesso! Seu token JWT: ${token}`);
+        document.getElementById('pedidoForm').reset();  // Limpa o formulário após o envio
     } else {
         alert("Erro ao enviar o pedido.");
     }
