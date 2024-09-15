@@ -7,6 +7,9 @@ Parse.serverURL = 'https://parseapi.back4app.com';
 
 let token = '';  // Armazenar o token JWT
 
+// URL do backend no Vercel
+const backendUrl = 'https://restaurante-r7khbtgpf-isabelesouzas-projects.vercel.app/api/pedidos';
+
 // Função para enviar o pedido ao Back4App e receber o token JWT
 async function enviarPedido() {
     const prato = document.getElementById('prato').value;
@@ -14,7 +17,7 @@ async function enviarPedido() {
     const bebida = document.getElementById('bebida').value;
     const preco = parseFloat(document.getElementById('preco').value);
 
-    const response = await fetch('/pedidos', {
+    const response = await fetch(backendUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -37,7 +40,7 @@ async function enviarPedido() {
 async function listarPedidos() {
     const tokenDigitado = prompt("Digite o token JWT para acessar os pedidos:");
 
-    const response = await fetch('/pedidos', {
+    const response = await fetch(backendUrl, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${tokenDigitado}`
