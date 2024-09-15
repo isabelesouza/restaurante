@@ -1,136 +1,100 @@
+const API_URL = 'http://localhost:3000';  // Substitua pelo URL do backend no Heroku ou outro serviço
+let token = '';  // O token JWT será armazenado aqui após o login
 
-Parse.serverURL = 'https://parseapi.back4app.com';
-Parse.initialize(
-    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk', 
-    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE' 
-);
-
-// enviar o pedido para o banco de dados
-function enviarPedido() {
-    var prato = document.getElementById('prato').value;
-    var acompanhamento = document.getElementById('acompanhamento').value;
-    var bebida = document.getElementById('bebida').value;
-    var preco = parseFloat(document.getElementById('preco').value); 
-
-    
-    var Pedido = Parse.Object.extend('pedidos');
-    var pedido = new Pedido();
-
-   
-    pedido.set('prato', prato);
-    pedido.set('acompanhamento', acompanhamento);
-    pedido.set('bebida', bebida);
-    pedido.set('preco', preco);
-
-    // Salvar o pedido no banco de dados
-    pedido.save().then(function(response) {
-        console.log('Pedido enviado com sucesso:', response);
-        alert('Pedido enviado com sucesso!');
-        // Limpar o formulário após o envio do pedido
-        document.getElementById('pedidoForm').reset();
-    }).catch(function(error) {
-        console.error('Erro ao enviar o pedido:', error);
-        alert('Erro ao enviar o pedido. Por favor, tente novamente.');
+// Função para fazer login e obter o token JWT
+async function login() {
+    const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
     });
+    const data = await response.json();
+    token = data.token;
+    console.log('Token JWT recebido:', token);
 }
 
-// Função para listar os pedidos salvos no banco de dados
-function listarPedidos() {
-    var Pedido = Parse.Object.extend('pedidos');
-    var query = new Parse.Query(Pedido);
+// Função para listar os pedidos
+async function listarPedidos() {
+    // Primeiro, faça login para obter o token
+    await login();
 
-    query.find().then(function(results) {
-        console.log('Pedidos encontrados:', results);
-        
-        mostrarPedidosNaPagina(results);
-    }).catch(function(error) {
-        console.error('Erro ao buscar os pedidos:', error);
-        alert('Erro ao buscar os pedidos. Por favor, tente novamente.');
+    const response = await fetch(`${API_URL}/pedidos`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
     });
+
+    if (response.ok) {
+        const pedidos = await response.json();
+        const listaPedidos = document.getElementById('lista-pedidos');
+
+        pedidos.forEach(pedido => {
+            const item = document.createElement('li');
+            item.textContent = `${pedido.prato} - ${pedido.acompanhamento} - R$${pedido.preco}`;
+
+            // Adicionar botão de editar
+            const btnEditar = document.createElement('button');
+            btnEditar.textContent = 'Editar';
+            btnEditar.classList.add('btn-editar');
+            btnEditar.onclick = () => editarPedido(pedido.id);
+            item.appendChild(btnEditar);
+
+            // Adicionar botão de excluir
+            const btnExcluir = document.createElement('button');
+            btnExcluir.textContent = 'Excluir';
+            btnExcluir.classList.add('btn-excluir');
+            btnExcluir.onclick = () => deletarPedido(pedido.id);
+            item.appendChild(btnExcluir);
+
+            listaPedidos.appendChild(item);
+        });
+    } else {
+        alert("Erro ao listar os pedidos.");
+    }
 }
 
-// Função para mostrar os pedidos na página
-function mostrarPedidosNaPagina(pedidos) {
-    var listaPedidos = document.getElementById('lista-pedidos');
-    listaPedidos.innerHTML = ''; 
-
-    pedidos.forEach(function(pedido) {
-        var prato = pedido.get('prato');
-        var acompanhamento = pedido.get('acompanhamento');
-        var bebida = pedido.get('bebida');
-        var preco = pedido.get('preco');
-        var id = pedido.id; 
-
-        var listItem = document.createElement('li');
-        listItem.textContent = `Prato: ${prato}, Acompanhamento: ${acompanhamento}, Bebida: ${bebida}, Preço: R$ ${preco}`;
-
-       
-        var editButton = document.createElement('button');
-        editButton.textContent = 'Editar';
-        editButton.className = 'btn-editar';
-        editButton.onclick = function() {
-            editarPedido(id);
-        };
-        listItem.appendChild(editButton);
-
-       
-        var deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Excluir';
-        deleteButton.className = 'btn-excluir';
-        deleteButton.onclick = function() {
-            deletarPedido(id);
-            // Recarregar a lista após a exclusão
-            listarPedidos();
-        };
-        listItem.appendChild(deleteButton);
-
-        listaPedidos.appendChild(listItem);
-    });
-}
-
+// Função para editar um pedido (implementação adicional)
 function editarPedido(id) {
-    var novoPrato = prompt("Novo prato:");
-    var novoAcompanhamento = prompt("Novo acompanhamento:");
-    var novaBebida = prompt("Nova bebida:");
-    var novoPreco = parseFloat(prompt("Novo preço:"));
+    // Implementar lógica para editar o pedido
+    const novoPrato = prompt('Novo prato:');
+    const novoAcompanhamento = prompt('Novo acompanhamento:');
+    const novaBebida = prompt('Nova bebida:');
+    const novoPreco = prompt('Novo preço:');
 
-    var Pedido = Parse.Object.extend('pedidos');
-    var query = new Parse.Query(Pedido);
-
-    
-    query.get(id).then(function(pedido) {
-        // Modificar os valores do pedido
-        pedido.set('prato', novoPrato);
-        pedido.set('acompanhamento', novoAcompanhamento);
-        pedido.set('bebida', novaBebida);
-        pedido.set('preco', novoPreco);
-
-        // Salvar as modificações no banco de dados
-        return pedido.save();
-    }).then(function(updatedPedido) {
-        console.log('Pedido atualizado com sucesso:', updatedPedido);
-        // Recarregar a lista 
-        listarPedidos();
-    }).catch(function(error) {     console.error('Erro ao atualizar o pedido:', error);
-});
+    fetch(`${API_URL}/pedidos/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prato: novoPrato, acompanhamento: novoAcompanhamento, bebida: novaBebida, preco: novoPreco })
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Pedido editado com sucesso!');
+            window.location.reload();  // Recarregar a lista de pedidos
+        } else {
+            alert('Erro ao editar o pedido.');
+        }
+    });
 }
 
-//  deletar um pedido
+// Função para excluir um pedido
 function deletarPedido(id) {
-var Pedido = Parse.Object.extend('pedidos');
-var query = new Parse.Query(Pedido);
-
-// Buscar o pedido pelo ID
-query.get(id).then(function(pedido) {
-    // Deletar o pedido
-    return pedido.destroy();
-}).then(function(deletedPedido) {
-    console.log('Pedido deletado com sucesso:', deletedPedido);
-    // Recarregar a lista
-    listarPedidos();
-}).catch(function(error) {
-    console.error('Erro ao deletar o pedido:', error);
-});
+    fetch(`${API_URL}/pedidos/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Pedido excluído com sucesso!');
+            window.location.reload();  // Recarregar a lista de pedidos
+        } else {
+            alert('Erro ao excluir o pedido.');
+        }
+    });
 }
-
-
