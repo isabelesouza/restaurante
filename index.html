@@ -1,29 +1,55 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurante - Pedido</title>
-    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
-<script src="script.js" defer></script>
+let token = '';  // Store the JWT token
 
+async function generateToken() {
+    const response = await fetch('/generate-token', { method: 'POST' });
+    const data = await response.json();
+    token = data.token;
+}
 
+// Sending the JWT with the pedido
+async function enviarPedido() {
+    await generateToken();
 
-</head>
-<body>
-    <h1>Faça seu Pedido</h1>
-    <form id="pedidoForm" onsubmit="event.preventDefault(); enviarPedido();">
-        <label for="prato">Prato:</label>
-        <input type="text" id="prato" required><br><br>
-        <label for="acompanhamento">Acompanhamento:</label>
-        <input type="text" id="acompanhamento" required><br><br>
-        <label for="bebida">Bebida:</label>
-        <input type="text" id="bebida" required><br><br>
-        <label for="preco">Preço:</label>
-        <input type="number" id="preco" required><br><br>
-        <button type="submit">Enviar Pedido</button>
-    </form>
-    <br>
-    <a href="lista_pedidos.html">Ver Lista de Pedidos</a>
-</body>
-</html>
+    const prato = document.getElementById('prato').value;
+    const acompanhamento = document.getElementById('acompanhamento').value;
+    const bebida = document.getElementById('bebida').value;
+    const preco = document.getElementById('preco').value;
+
+    await fetch('/pedidos', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prato, acompanhamento, bebida, preco })
+    }).then(response => {
+        if (response.ok) {
+            alert("Pedido enviado com sucesso!");
+            document.getElementById('pedidoForm').reset();
+        } else {
+            alert("Erro ao enviar pedido.");
+        }
+    });
+}
+
+// Function to list pedidos
+async function listarPedidos() {
+    await generateToken();
+
+    const response = await fetch('/pedidos', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    const pedidos = await response.json();
+    const listaPedidos = document.getElementById('lista-pedidos');
+
+    pedidos.forEach(pedido => {
+        const item = document.createElement('li');
+        item.textContent = `${pedido.prato} - ${pedido.acompanhamento} - R$${pedido.preco}`;
+
+        listaPedidos.appendChild(item);
+    });
+}
