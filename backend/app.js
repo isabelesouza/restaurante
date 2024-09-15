@@ -50,7 +50,7 @@ app.post('/pedidos', verifyToken, async (req, res) => {
         console.log('Pedido salvo no Back4App:', savedPedido);
 
         // Send to RabbitMQ
-        amqp.connect('amqps://<your_rabbitmq_url>', (error0, connection) => {
+        amqp.connect('amqps://vkikkzte:Hx95EnJQdMfYvipDsNTxmKabOikOwJMT@prawn.rmq.cloudamqp.com/vkikkzte', (error0, connection) => {
             if (error0) throw error0;
             connection.createChannel((error1, channel) => {
                 if (error1) throw error1;

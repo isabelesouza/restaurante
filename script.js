@@ -5,31 +5,29 @@ Parse.initialize(
 );
 Parse.serverURL = 'https://parseapi.back4app.com';
 
-// Função para enviar um pedido
 async function enviarPedido() {
     const prato = document.getElementById('prato').value;
     const acompanhamento = document.getElementById('acompanhamento').value;
     const bebida = document.getElementById('bebida').value;
     const preco = document.getElementById('preco').value;
 
-    // Criar um novo objeto na classe "Pedido"
-    const Pedido = Parse.Object.extend('Pedido');  // Certifique-se de que a classe "Pedido" exista no Back4App
-    const novoPedido = new Pedido();
-
-    novoPedido.set('prato', prato);
-    novoPedido.set('acompanhamento', acompanhamento);
-    novoPedido.set('bebida', bebida);
-    novoPedido.set('preco', preco);
-
-    try {
-        // Salvar o pedido no Back4App
-        await novoPedido.save();
-        alert('Pedido enviado com sucesso!');
-        document.getElementById('pedidoForm').reset();  // Limpar o formulário
-    } catch (error) {
-        alert('Erro ao enviar o pedido: ' + error.message);
-    }
+    await fetch('/pedidos', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,  // Use the JWT token
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prato, acompanhamento, bebida, preco })
+    }).then(response => {
+        if (response.ok) {
+            alert("Pedido enviado com sucesso!");
+            document.getElementById('pedidoForm').reset();
+        } else {
+            alert("Erro ao enviar pedido.");
+        }
+    });
 }
+
 
 // Função para listar os pedidos
 async function listarPedidos() {
