@@ -8,7 +8,6 @@ Parse.initialize(
 Parse.serverURL = 'https://parseapi.back4app.com';
 
 
-// Função para enviar o pedido e exibir o token
 async function enviarPedido() {
     const prato = document.getElementById('prato').value;
     const acompanhamento = document.getElementById('acompanhamento').value;
@@ -24,10 +23,7 @@ async function enviarPedido() {
     });
 
     if (response.ok) {
-        const data = await response.json();
-        token = data.token;  // Armazena o token recebido
-        alert(`Pedido enviado com sucesso! Seu token JWT: ${token}`);
-        document.getElementById('pedidoForm').reset();
+        alert("Pedido enviado com sucesso!");
     } else {
         alert("Erro ao enviar o pedido.");
     }
