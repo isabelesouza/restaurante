@@ -14,7 +14,6 @@ async function enviarPedido() {
     const bebida = document.getElementById('bebida').value;
     const preco = document.getElementById('preco').value;
 
-    // Enviar dados para o backend e salvar no Back4App
     const response = await fetch('/pedidos', {
         method: 'POST',
         headers: {
@@ -24,10 +23,8 @@ async function enviarPedido() {
     });
 
     if (response.ok) {
-        const data = await response.json();
-        token = data.token;  // Armazena o token recebido
-        alert(`Pedido enviado com sucesso! Seu token JWT: ${token}`);
-        document.getElementById('pedidoForm').reset();  // Limpa o formulário após o envio
+        alert("Pedido enviado com sucesso!");
+        window.location.href = "lista_pedidos.html";  // Redireciona para a página de pedidos
     } else {
         alert("Erro ao enviar o pedido.");
     }

@@ -8,7 +8,25 @@ const app = express();
 app.use(bodyParser.json());
 
 const JWT_SECRET = 'your_jwt_secret';
+// Rota POST para /pedidos
+app.post('/pedidos', async (req, res) => {
+    const { prato, acompanhamento, bebida, preco } = req.body;
 
+    // Salvar no Back4App
+    const Pedido = Parse.Object.extend('Pedido');
+    const novoPedido = new Pedido();
+    novoPedido.set('prato', prato);
+    novoPedido.set('acompanhamento', acompanhamento);
+    novoPedido.set('bebida', bebida);
+    novoPedido.set('preco', preco);
+
+    try {
+        const savedPedido = await novoPedido.save();
+        res.json({ message: 'Pedido salvo com sucesso!', pedido: savedPedido });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao salvar o pedido no Back4App' });
+    }
+});
 // Middleware para verificar o token JWT
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
