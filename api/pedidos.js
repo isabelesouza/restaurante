@@ -1,21 +1,24 @@
 const express = require('express');
+const cors = require('cors');  // Importar o pacote CORS
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-const Parse = require('parse/node');  
+const Parse = require('parse/node');
 const amqp = require('amqplib/callback_api');
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());  // Habilitar CORS para todas as rotas
 
 const JWT_SECRET = 'seu_segredo_jwt';
 
+// Configurando o Back4App
 Parse.initialize(
-    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk',  
-    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE'   
+    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk',  // Application ID
+    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE'   // JavaScript Key
 );
 Parse.serverURL = 'https://parseapi.back4app.com';
 
-// Função para gerar JWT
+// Função para gerar o JWT real
 function generateJWT() {
     const payload = { permission: 'access_orders' };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
@@ -26,6 +29,7 @@ function generateJWT() {
 app.post('/pedidos', async (req, res) => {
     const { prato, acompanhamento, bebida, preco } = req.body;
 
+    // Salvar no Back4App
     const Pedido = Parse.Object.extend('pedidos');
     const novoPedido = new Pedido();
     novoPedido.set('prato', prato);
@@ -34,8 +38,9 @@ app.post('/pedidos', async (req, res) => {
     novoPedido.set('preco', preco);
 
     try {
-        const savedPedido = await novoPedido.save(); 
+        const savedPedido = await novoPedido.save();  // Salva o pedido no Back4App
 
+        // Enviar para RabbitMQ
         amqp.connect('amqps://vkikkzte:Hx95EnJQdMfYvipDsNTxmKabOikOwJMT@prawn.rmq.cloudamqp.com/vkikkzte', (error0, connection) => {
             if (error0) throw error0;
             connection.createChannel((error1, channel) => {
@@ -51,6 +56,7 @@ app.post('/pedidos', async (req, res) => {
             });
         });
 
+        // Gera o JWT e envia para o frontend
         const token = generateJWT();
         res.json({ message: 'Pedido enviado com sucesso', token });
     } catch (error) {
