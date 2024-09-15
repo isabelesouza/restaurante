@@ -1,100 +1,99 @@
-const API_URL = 'http://localhost:3000';  // Substitua pelo URL do backend no Heroku ou outro serviço
-let token = '';  // O token JWT será armazenado aqui após o login
+// Inicializar Parse com as credenciais do Back4App
+Parse.initialize(
+    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk',  // Application ID
+    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE'   // JavaScript Key
+);
+Parse.serverURL = 'https://parseapi.back4app.com';
 
-// Função para fazer login e obter o token JWT
-async function login() {
-    const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
-    const data = await response.json();
-    token = data.token;
-    console.log('Token JWT recebido:', token);
+// Função para enviar um pedido
+async function enviarPedido() {
+    const prato = document.getElementById('prato').value;
+    const acompanhamento = document.getElementById('acompanhamento').value;
+    const bebida = document.getElementById('bebida').value;
+    const preco = document.getElementById('preco').value;
+
+    // Criar um novo objeto na classe "Pedido"
+    const Pedido = Parse.Object.extend('Pedido');  // Certifique-se de que a classe "Pedido" exista no Back4App
+    const novoPedido = new Pedido();
+
+    novoPedido.set('prato', prato);
+    novoPedido.set('acompanhamento', acompanhamento);
+    novoPedido.set('bebida', bebida);
+    novoPedido.set('preco', preco);
+
+    try {
+        // Salvar o pedido no Back4App
+        await novoPedido.save();
+        alert('Pedido enviado com sucesso!');
+        document.getElementById('pedidoForm').reset();  // Limpar o formulário
+    } catch (error) {
+        alert('Erro ao enviar o pedido: ' + error.message);
+    }
 }
 
 // Função para listar os pedidos
 async function listarPedidos() {
-    // Primeiro, faça login para obter o token
-    await login();
+    const Pedido = Parse.Object.extend('Pedido');
+    const query = new Parse.Query(Pedido);
 
-    const response = await fetch(`${API_URL}/pedidos`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    });
-
-    if (response.ok) {
-        const pedidos = await response.json();
+    try {
+        const resultados = await query.find();
         const listaPedidos = document.getElementById('lista-pedidos');
+        listaPedidos.innerHTML = '';
 
-        pedidos.forEach(pedido => {
+        resultados.forEach(pedido => {
             const item = document.createElement('li');
-            item.textContent = `${pedido.prato} - ${pedido.acompanhamento} - R$${pedido.preco}`;
+            item.textContent = `${pedido.get('prato')} - ${pedido.get('acompanhamento')} - R$${pedido.get('preco')}`;
 
             // Adicionar botão de editar
             const btnEditar = document.createElement('button');
             btnEditar.textContent = 'Editar';
             btnEditar.classList.add('btn-editar');
-            btnEditar.onclick = () => editarPedido(pedido.id);
+            btnEditar.onclick = () => editarPedido(pedido);
             item.appendChild(btnEditar);
 
             // Adicionar botão de excluir
             const btnExcluir = document.createElement('button');
             btnExcluir.textContent = 'Excluir';
             btnExcluir.classList.add('btn-excluir');
-            btnExcluir.onclick = () => deletarPedido(pedido.id);
+            btnExcluir.onclick = () => deletarPedido(pedido);
             item.appendChild(btnExcluir);
 
             listaPedidos.appendChild(item);
         });
-    } else {
-        alert("Erro ao listar os pedidos.");
+    } catch (error) {
+        alert('Erro ao listar os pedidos: ' + error.message);
     }
 }
 
-// Função para editar um pedido (implementação adicional)
-function editarPedido(id) {
-    // Implementar lógica para editar o pedido
-    const novoPrato = prompt('Novo prato:');
-    const novoAcompanhamento = prompt('Novo acompanhamento:');
-    const novaBebida = prompt('Nova bebida:');
-    const novoPreco = prompt('Novo preço:');
+// Função para editar um pedido
+async function editarPedido(pedido) {
+    const novoPrato = prompt('Novo prato:', pedido.get('prato'));
+    const novoAcompanhamento = prompt('Novo acompanhamento:', pedido.get('acompanhamento'));
+    const novaBebida = prompt('Nova bebida:', pedido.get('bebida'));
+    const novoPreco = prompt('Novo preço:', pedido.get('preco'));
 
-    fetch(`${API_URL}/pedidos/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ prato: novoPrato, acompanhamento: novoAcompanhamento, bebida: novaBebida, preco: novoPreco })
-    })
-    .then(response => {
-        if (response.ok) {
-            alert('Pedido editado com sucesso!');
-            window.location.reload();  // Recarregar a lista de pedidos
-        } else {
-            alert('Erro ao editar o pedido.');
-        }
-    });
+    pedido.set('prato', novoPrato);
+    pedido.set('acompanhamento', novoAcompanhamento);
+    pedido.set('bebida', novaBebida);
+    pedido.set('preco', novoPreco);
+
+    try {
+        await pedido.save();
+        alert('Pedido editado com sucesso!');
+        window.location.reload();  // Recarregar a lista de pedidos
+    } catch (error) {
+        alert('Erro ao editar o pedido: ' + error.message);
+    }
 }
 
 // Função para excluir um pedido
-function deletarPedido(id) {
-    fetch(`${API_URL}/pedidos/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            alert('Pedido excluído com sucesso!');
-            window.location.reload();  // Recarregar a lista de pedidos
-        } else {
-            alert('Erro ao excluir o pedido.');
-        }
-    });
+async function deletarPedido(pedido) {
+    try {
+        await pedido.destroy();
+        alert('Pedido excluído com sucesso!');
+        window.location.reload();  // Recarregar a lista de pedidos
+    } catch (error) {
+        alert('Erro ao excluir o pedido: ' + error.message);
+    }
 }

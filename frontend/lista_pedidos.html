@@ -6,17 +6,22 @@
     <title>Lista de Pedidos</title>
     <style>
         .lista-pedidos li {
-            font-size: 21px; 
+            font-size: 21px;
         }
         .btn-excluir {
-            background-color: #FFB6C1; 
-            color: black; 
+            background-color: #FFB6C1;
+            color: black;
+            margin-left: 10px;
         }
         .btn-editar {
-            background-color: #FFFFE0; 
-            color: black; 
+            background-color: #FFFFE0;
+            color: black;
+            margin-left: 10px;
         }
     </style>
+
+    <!-- Conectar ao Back4App com Parse SDK -->
+    <script type="text/javascript" src="https://npmcdn.com/parse/dist/parse.min.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body onload="listarPedidos()">
@@ -27,3 +32,4 @@
     <a href="index.html">Voltar para Adicionar Pedido</a>
 </body>
 </html>
+
