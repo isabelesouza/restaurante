@@ -1,32 +1,13 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-const Parse = require('./config/back4app');  // Importa o Back4App
 const amqp = require('amqplib/callback_api');
 
 const app = express();
 app.use(bodyParser.json());
 
 const JWT_SECRET = 'your_jwt_secret';
-// Rota POST para /pedidos
-app.post('/pedidos', async (req, res) => {
-    const { prato, acompanhamento, bebida, preco } = req.body;
 
-    // Salvar no Back4App
-    const Pedido = Parse.Object.extend('Pedido');
-    const novoPedido = new Pedido();
-    novoPedido.set('prato', prato);
-    novoPedido.set('acompanhamento', acompanhamento);
-    novoPedido.set('bebida', bebida);
-    novoPedido.set('preco', preco);
-
-    try {
-        const savedPedido = await novoPedido.save();
-        res.json({ message: 'Pedido salvo com sucesso!', pedido: savedPedido });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao salvar o pedido no Back4App' });
-    }
-});
 // Middleware para verificar o token JWT
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
@@ -45,63 +26,32 @@ function verifyToken(req, res, next) {
     }
 }
 
-// Rota para criar o pedido e gerar o token
-app.post('/pedidos', async (req, res) => {
+// Rota para gerar o token JWT
+app.post('/generate-token', (req, res) => {
+    const payload = { permission: 'access_orders' };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+});
+
+// Rota para enviar dados ao RabbitMQ
+app.post('/send-rabbitmq', verifyToken, (req, res) => {
     const { prato, acompanhamento, bebida, preco } = req.body;
 
-    // Salva no Back4App
-    const Pedido = Parse.Object.extend('Pedido');
-    const novoPedido = new Pedido();
-    novoPedido.set('prato', prato);
-    novoPedido.set('acompanhamento', acompanhamento);
-    novoPedido.set('bebida', bebida);
-    novoPedido.set('preco', preco);
+    amqp.connect('amqps://your_rabbitmq_url', (error0, connection) => {
+        if (error0) throw error0;
+        connection.createChannel((error1, channel) => {
+            if (error1) throw error1;
 
-    try {
-        const savedPedido = await novoPedido.save();
+            const queue = 'pedidos';
+            const msg = JSON.stringify({ prato, acompanhamento, bebida, preco });
 
-        // Gera o token JWT
-        const payload = { permission: 'access_orders' };
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+            channel.assertQueue(queue, { durable: false });
+            channel.sendToQueue(queue, Buffer.from(msg));
 
-        // Envia para RabbitMQ
-        amqp.connect('amqps://your_rabbitmq_url', (error0, connection) => {
-            if (error0) throw error0;
-            connection.createChannel((error1, channel) => {
-                if (error1) throw error1;
-
-                const queue = 'pedidos';
-                const msg = JSON.stringify(req.body);
-
-                channel.assertQueue(queue, { durable: false });
-                channel.sendToQueue(queue, Buffer.from(msg));
-
-                res.json({ message: 'Pedido enviado com sucesso', token });
-            });
+            res.json({ message: 'Pedido enviado para RabbitMQ' });
         });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao salvar o pedido no Back4App' });
-    }
+    });
 });
 
-// Rota para listar pedidos com JWT
-app.get('/pedidos', verifyToken, async (req, res) => {
-    const Pedido = Parse.Object.extend('Pedido');
-    const query = new Parse.Query(Pedido);
-
-    try {
-        const results = await query.find();
-        const pedidos = results.map(p => ({
-            prato: p.get('prato'),
-            acompanhamento: p.get('acompanhamento'),
-            bebida: p.get('bebida'),
-            preco: p.get('preco')
-        }));
-
-        res.json(pedidos);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao listar os pedidos' });
-    }
-});
-
+// Iniciar o servidor
 app.listen(3000, () => console.log('Servidor rodando na porta 3000'));
