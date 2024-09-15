@@ -1,14 +1,68 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
+const Parse = require('parse/node');  // Integração com o Back4App
 const amqp = require('amqplib/callback_api');
 
 const app = express();
 app.use(bodyParser.json());
 
-const JWT_SECRET = 'your_jwt_secret';
+const JWT_SECRET = 'seu_segredo_jwt';
 
-// Middleware para verificar o token JWT
+// Configurando o Back4App
+Parse.initialize(
+    '7KHUUlAqvUvsjds7YslmBLIPglpdSQYCDM0wPYSk',  // Application ID
+    'l5hvrmdXHu2tG9YbLyhjdxM8Jzge1EkCrdVrnpBE'   // JavaScript Key
+);
+Parse.serverURL = 'https://parseapi.back4app.com';
+
+// Função para gerar o JWT real
+function generateJWT() {
+    const payload = { permission: 'access_orders' };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+    return token;
+}
+
+// Rota para enviar pedidos ao Back4App e RabbitMQ
+app.post('/pedidos', async (req, res) => {
+    const { prato, acompanhamento, bebida, preco } = req.body;
+
+    // Salvar no Back4App
+    const Pedido = Parse.Object.extend('pedidos');
+    const novoPedido = new Pedido();
+    novoPedido.set('prato', prato);
+    novoPedido.set('acompanhamento', acompanhamento);
+    novoPedido.set('bebida', bebida);
+    novoPedido.set('preco', preco);
+
+    try {
+        const savedPedido = await novoPedido.save();  // Salva o pedido no Back4App
+
+        // Enviar para RabbitMQ
+        amqp.connect('amqps://vkikkzte:Hx95EnJQdMfYvipDsNTxmKabOikOwJMT@prawn.rmq.cloudamqp.com/vkikkzte', (error0, connection) => {
+            if (error0) throw error0;
+            connection.createChannel((error1, channel) => {
+                if (error1) throw error1;
+
+                const queue = 'pedidos';
+                const msg = JSON.stringify(req.body);
+
+                channel.assertQueue(queue, { durable: false });
+                channel.sendToQueue(queue, Buffer.from(msg));
+
+                console.log('Pedido enviado para RabbitMQ:', msg);
+            });
+        });
+
+        // Gera o JWT e envia para o frontend
+        const token = generateJWT();
+        res.json({ message: 'Pedido enviado com sucesso', token });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao salvar o pedido no Back4App ou enviar ao RabbitMQ' });
+    }
+});
+
+// Middleware para verificar o JWT
 function verifyToken(req, res, next) {
     const bearerHeader = req.headers['authorization'];
     if (bearerHeader) {
@@ -26,32 +80,23 @@ function verifyToken(req, res, next) {
     }
 }
 
-// Rota para gerar o token JWT
-app.post('/generate-token', (req, res) => {
-    const payload = { permission: 'access_orders' };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
+// Rota protegida para listar pedidos (JWT necessário)
+app.get('/pedidos', verifyToken, async (req, res) => {
+    const Pedido = Parse.Object.extend('pedidos');
+    const query = new Parse.Query(Pedido);
+
+    try {
+        const results = await query.find();
+        const pedidos = results.map(p => ({
+            prato: p.get('prato'),
+            acompanhamento: p.get('acompanhamento'),
+            bebida: p.get('bebida'),
+            preco: p.get('preco')
+        }));
+        res.json(pedidos);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao listar os pedidos' });
+    }
 });
 
-// Rota para enviar dados ao RabbitMQ
-app.post('/send-rabbitmq', verifyToken, (req, res) => {
-    const { prato, acompanhamento, bebida, preco } = req.body;
-
-    amqp.connect('amqps://your_rabbitmq_url', (error0, connection) => {
-        if (error0) throw error0;
-        connection.createChannel((error1, channel) => {
-            if (error1) throw error1;
-
-            const queue = 'pedidos';
-            const msg = JSON.stringify({ prato, acompanhamento, bebida, preco });
-
-            channel.assertQueue(queue, { durable: false });
-            channel.sendToQueue(queue, Buffer.from(msg));
-
-            res.json({ message: 'Pedido enviado para RabbitMQ' });
-        });
-    });
-});
-
-// Iniciar o servidor
 app.listen(3000, () => console.log('Servidor rodando na porta 3000'));

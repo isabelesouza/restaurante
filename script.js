@@ -5,54 +5,61 @@ Parse.initialize(
 );
 Parse.serverURL = 'https://parseapi.back4app.com';
 
-let token = '';  // Variável para armazenar o token JWT
+let token = '';  // Armazenar o token JWT
 
-// Função para enviar o pedido diretamente ao Back4App e gerar token
+// Função para enviar o pedido ao Back4App e receber o token JWT
 async function enviarPedido() {
     const prato = document.getElementById('prato').value;
     const acompanhamento = document.getElementById('acompanhamento').value;
     const bebida = document.getElementById('bebida').value;
-    const preco = document.getElementById('preco').value;
+    const preco = parseFloat(document.getElementById('preco').value);
 
-    // Criar objeto Pedido e enviar para o Back4App
-    const Pedido = Parse.Object.extend('Pedido');
-    const novoPedido = new Pedido();
-    novoPedido.set('prato', prato);
-    novoPedido.set('acompanhamento', acompanhamento);
-    novoPedido.set('bebida', bebida);
-    novoPedido.set('preco', preco);
+    const response = await fetch('/pedidos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prato, acompanhamento, bebida, preco })
+    });
 
-    try {
-        const savedPedido = await novoPedido.save();
-        token = generateToken();  // Gera o token fictício
+    if (response.ok) {
+        const data = await response.json();
+        token = data.token;  // Armazena o token JWT recebido
         alert("Pedido enviado com sucesso! Seu token JWT: " + token);
+        document.getElementById('pedidoForm').reset();
         window.location.href = "lista_pedidos.html";  // Redireciona para a página de pedidos
-    } catch (error) {
-        alert("Erro ao enviar o pedido: " + error.message);
+    } else {
+        alert("Erro ao enviar o pedido.");
     }
 }
 
-// Função para gerar um token fictício (exemplo)
-function generateToken() {
-    return 'seu_token_jwt_ficticio';
-}
-
-// Função para listar pedidos diretamente do Back4App
+// Função para listar os pedidos após validar o token JWT
 async function listarPedidos() {
-    const Pedido = Parse.Object.extend('Pedido');
-    const query = new Parse.Query(Pedido);
+    const tokenDigitado = prompt("Digite o token JWT para acessar os pedidos:");
 
-    try {
-        const resultados = await query.find();  // Buscar todos os registros
-        const listaPedidos = document.getElementById('lista-pedidos');
-        listaPedidos.innerHTML = '';  // Limpa a lista antes de adicionar novos itens
+    const response = await fetch('/pedidos', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${tokenDigitado}`
+        }
+    });
 
-        resultados.forEach(pedido => {
-            const item = document.createElement('li');
-            item.textContent = `${pedido.get('prato')} - ${pedido.get('acompanhamento')} - R$${pedido.get('preco')}`;
-            listaPedidos.appendChild(item);
-        });
-    } catch (error) {
-        alert('Erro ao listar os pedidos: ' + error.message);
+    if (response.ok) {
+        const pedidos = await response.json();
+        mostrarPedidosNaPagina(pedidos);
+    } else {
+        alert("Token inválido ou erro ao listar os pedidos.");
     }
+}
+
+// Função para mostrar os pedidos na página
+function mostrarPedidosNaPagina(pedidos) {
+    const listaPedidos = document.getElementById('lista-pedidos');
+    listaPedidos.innerHTML = '';  // Limpa a lista antes de adicionar os itens
+
+    pedidos.forEach(pedido => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `Prato: ${pedido.prato}, Acompanhamento: ${pedido.acompanhamento}, Bebida: ${pedido.bebida}, Preço: R$ ${pedido.preco}`;
+        listaPedidos.appendChild(listItem);
+    });
 }
