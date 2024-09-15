@@ -18,6 +18,7 @@ function verifyToken(req, res, next) {
             if (err) {
                 res.sendStatus(403);
             } else {
+                req.authData = authData;
                 next();
             }
         });
@@ -26,15 +27,8 @@ function verifyToken(req, res, next) {
     }
 }
 
-// Route to generate JWT
-app.post('/generate-token', (req, res) => {
-    const payload = { permission: 'access_orders' };  // General payload
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
-});
-
-// Route to create a pedido
-app.post('/pedidos', verifyToken, async (req, res) => {
+// Route to create a pedido and generate a token
+app.post('/pedidos', async (req, res) => {
     const { prato, acompanhamento, bebida, preco } = req.body;
 
     // Save to Back4App
@@ -49,6 +43,10 @@ app.post('/pedidos', verifyToken, async (req, res) => {
         const savedPedido = await novoPedido.save();
         console.log('Pedido salvo no Back4App:', savedPedido);
 
+        // Generate JWT token
+        const payload = { permission: 'access_orders' };
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+
         // Send to RabbitMQ
         amqp.connect('amqps://vkikkzte:Hx95EnJQdMfYvipDsNTxmKabOikOwJMT@prawn.rmq.cloudamqp.com/vkikkzte', (error0, connection) => {
             if (error0) throw error0;
@@ -62,7 +60,7 @@ app.post('/pedidos', verifyToken, async (req, res) => {
                 channel.sendToQueue(queue, Buffer.from(msg));
 
                 console.log('Pedido enviado para RabbitMQ:', msg);
-                res.json({ message: 'Pedido enviado com sucesso', pedido: savedPedido });
+                res.json({ message: 'Pedido enviado com sucesso', token });  // Return token to user
             });
         });
     } catch (error) {
@@ -71,7 +69,7 @@ app.post('/pedidos', verifyToken, async (req, res) => {
     }
 });
 
-// Route to list pedidos
+// Route to list pedidos with JWT
 app.get('/pedidos', verifyToken, async (req, res) => {
     const Pedido = Parse.Object.extend('Pedido');
     const query = new Parse.Query(Pedido);
