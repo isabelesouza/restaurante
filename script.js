@@ -24,12 +24,17 @@ async function enviarPedido() {
 
     try {
         const savedPedido = await novoPedido.save();
-        token = 'seu_token';  // Definir um token fictício para usar mais tarde
+        token = generateToken();  // Gera o token fictício
         alert("Pedido enviado com sucesso! Seu token JWT: " + token);
         window.location.href = "lista_pedidos.html";  // Redireciona para a página de pedidos
     } catch (error) {
         alert("Erro ao enviar o pedido: " + error.message);
     }
+}
+
+// Função para gerar um token fictício (exemplo)
+function generateToken() {
+    return 'seu_token_jwt_ficticio';
 }
 
 // Função para listar pedidos diretamente do Back4App
@@ -38,7 +43,7 @@ async function listarPedidos() {
     const query = new Parse.Query(Pedido);
 
     try {
-        const resultados = await query.find();
+        const resultados = await query.find();  // Buscar todos os registros
         const listaPedidos = document.getElementById('lista-pedidos');
         listaPedidos.innerHTML = '';  // Limpa a lista antes de adicionar novos itens
 
